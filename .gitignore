@@ -1,0 +1,13 @@
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Large datasets (Keep your GitHub repository light)
+data/raw/
+
+# Local environment files
+.env
+venv/
+.vscode/
+# Ignore heavy pre-trained ML models
+models/
