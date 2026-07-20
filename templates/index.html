@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         body {
@@ -17,15 +18,173 @@
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 40px 0;
+            padding: 20px 0;
+            overflow-x: hidden;
         }
 
+        /* Top Header Bar */
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .user-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout {
+            color: #ef4444;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+            margin-left: 10px;
+        }
+
+        .btn-logout:hover {
+            color: #f87171;
+            text-decoration: underline;
+        }
+
+        /* Slide-out Sidebar Drawer */
+        .sidebar-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 380px;
+            max-width: 85vw;
+            height: 100%;
+            background: #1e293b;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 25px 0 50px rgba(0, 0, 0, 0.6);
+            z-index: 1050;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-header h5 {
+            font-weight: 700;
+            color: #10b981;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .drawer-close:hover {
+            color: #ffffff;
+        }
+
+        /* Sidebar Tabs */
+        .drawer-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .drawer-pane {
+            display: none;
+        }
+
+        .drawer-pane.active {
+            display: block;
+        }
+
+        /* Backdrop Overlay */
+        .drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .drawer-backdrop.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Main app-card and elements */
         .app-card {
             background: #1e293b;
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             overflow: hidden;
+            margin-top: 60px; /* offset for top header bar */
         }
 
         .app-header {
@@ -38,7 +197,7 @@
         .app-header h1 {
             font-size: 2rem;
             font-weight: 700;
-            color: #10b981; /* High-contrast Emerald */
+            color: #10b981;
             margin-bottom: 8px;
             text-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
         }
@@ -47,7 +206,7 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.12em;
-            color: #10b981; /* Changed to Emerald for visibility */
+            color: #10b981;
             font-weight: 700;
             margin-bottom: 25px;
             display: flex;
@@ -56,7 +215,7 @@
 
         .form-label {
             font-size: 0.95rem;
-            color: #ffffff; /* Pure white for visibility */
+            color: #ffffff;
             font-weight: 600;
             margin-bottom: 10px;
         }
@@ -121,9 +280,221 @@
 
         .text-success-bright { color: #10b981 !important; }
 
+        /* Composting Guide Styles */
+        .instruction-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .instruction-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .instruction-card h6 {
+            color: #10b981;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instruction-card p {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* History record item style */
+        .history-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .history-metric strong {
+            color: #ffffff;
+        }
+
+        .history-results {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-category {
+            color: #10b981;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .history-days {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .dashboard-card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        
+        .dashboard-card-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dashboard-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: #10b981;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        .trading-wick-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
     </style>
 </head>
 <body>
+
+<!-- Top Fixed Header Bar -->
+<div class="header-bar">
+    <button class="btn btn-outline-success border-0 px-2 text-success-bright" id="hamburger-btn" style="background: none;">
+        <i class="fas fa-bars fa-lg"></i>
+    </button>
+    <div class="d-flex align-items-center">
+        <div class="user-badge text-white">
+            <i class="fas fa-user-circle text-success-bright"></i>
+            <span>{{ username }}</span>
+        </div>
+        <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+    </div>
+</div>
+
+<!-- Slide-out Sidebar Drawer -->
+<div class="sidebar-drawer" id="sidebar-drawer">
+    <div class="drawer-header">
+        <h5><i class="fas fa-leaf"></i> Compost Console</h5>
+        <button class="drawer-close" id="drawer-close"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <!-- Tabs Navigation -->
+    <div class="drawer-tabs">
+        <button class="tab-btn active" onclick="switchTab('history')"><i class="fas fa-history me-1"></i> History</button>
+        <button class="tab-btn" onclick="switchTab('guide')"><i class="fas fa-book-open me-1"></i> Guide</button>
+    </div>
+    
+    <!-- Tab Panes Content -->
+    <div class="drawer-content">
+        <!-- History Pane -->
+        <div class="drawer-pane active" id="pane-history">
+            {% if history %}
+                {% for item in history %}
+                <div class="history-card">
+                    <div class="history-time"><i class="far fa-clock me-1"></i>{{ item.timestamp }}</div>
+                    <div class="history-grid">
+                        <div class="history-metric">pH: <strong>{{ item.ph }}</strong></div>
+                        <div class="history-metric">Temp: <strong>{{ item.temp }}°C</strong></div>
+                        <div class="history-metric">Humid: <strong>{{ item.humidity }}%</strong></div>
+                        <div class="history-metric">Moist: <strong>{{ item.moisture }}%</strong></div>
+                        <div class="history-metric">N-P-K: <strong>{{ item.n }}-{{ item.p }}-{{ item.k }}</strong></div>
+                    </div>
+                    <div class="history-results">
+                        <span class="history-category"><i class="fas fa-tags me-1"></i>{{ item.waste_category }}</span>
+                        <span class="history-days"><i class="fas fa-hourglass-half me-1"></i>{{ item.predicted_days }} Days</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5 text-secondary">
+                    <i class="fas fa-database fa-3x mb-3"></i>
+                    <p>No predictions yet. Submit a telemetry scan to start log.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Composting Guide Pane -->
+        <div class="drawer-pane" id="pane-guide">
+            <div class="instruction-card">
+                <h6><i class="fas fa-balance-scale"></i> 1. The Carbon-Nitrogen Ratio</h6>
+                <p>Maintain a 25:1 to 30:1 C:N balance. Combine "Browns" (Carbon-rich like dried leaves, straw, cardboard) with "Greens" (Nitrogen-rich like food scraps, green clippings).</p>
+            </div>
+            
+            <div class="instruction-card">
+                <h6><i class="fas fa-tint"></i> 2. Ideal Moisture Levels</h6>
+                <p>Optimal moisture is 45-60%. It should feel like a damp, wrung-out sponge. If too wet (anaerobic rot, bad odor), mix in dry Browns. If too dry, sprinkle lightly with water.</p>
+            </div>
+            
+            <div class="instruction-card">
+                <h6><i class="fas fa-thermometer-half"></i> 3. Temperature Zones</h6>
+                <p>Optimal heat is 40°C - 60°C (104°F - 140°F). Heat is generated by microbial activity. If the pile cools down, it's either finished decomposing or needs to be turned.</p>
+            </div>
+            
+            <div class="instruction-card">
+                <h6><i class="fas fa-wind"></i> 4. Turn to Aerate</h6>
+                <p>Aerobic bacteria need oxygen to decompose materials without odor. Turn the pile with a fork once or twice a week to inject oxygen and prevent cold pockets.</p>
+            </div>
+            
+            <div class="instruction-card">
+                <h6><i class="fas fa-vial"></i> 5. pH Level Insights</h6>
+                <p>Healthy compost has a pH of 6.0 to 8.0. Initial stages are slightly acidic (organic acids forming), but mature compost settles to a neutral or slightly alkaline balance.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop Overlay -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
 
 <div class="container" style="max-width: 850px;">
     <div class="app-card">
@@ -140,19 +511,19 @@
                 <div class="row g-4 mb-5">
                     <div class="col-md-3 col-6">
                         <label class="form-label">pH Level</label>
-                        <input type="number" step="0.01" name="ph" class="form-control" placeholder="6.5" required>
+                        <input type="number" step="0.01" name="ph" id="input-ph" class="form-control" placeholder="6.5" value="6.5" required>
                     </div>
                     <div class="col-md-3 col-6">
                         <label class="form-label">Temp (°C)</label>
-                        <input type="number" step="0.01" name="temp" class="form-control" placeholder="35" required>
+                        <input type="number" step="0.01" name="temp" id="input-temp" class="form-control" placeholder="35" value="35" required>
                     </div>
                     <div class="col-md-3 col-6">
                         <label class="form-label">Humidity (%)</label>
-                        <input type="number" step="0.01" name="humidity" class="form-control" placeholder="70" required>
+                        <input type="number" step="0.01" name="humidity" id="input-humidity" class="form-control" placeholder="70" value="70" required>
                     </div>
                     <div class="col-md-3 col-6">
                         <label class="form-label">Moisture (%)</label>
-                        <input type="number" step="0.01" name="moisture" class="form-control" placeholder="55" required>
+                        <input type="number" step="0.01" name="moisture" id="input-moisture" class="form-control" placeholder="55" value="55" required>
                     </div>
                 </div>
 
@@ -162,15 +533,15 @@
                 <div class="row g-4">
                     <div class="col-md-4">
                         <label class="form-label">Nitrogen (N)</label>
-                        <input type="number" name="n" class="form-control" placeholder="Value" required>
+                        <input type="number" name="n" id="input-n" class="form-control" placeholder="Value" value="12" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Phosphorus (P)</label>
-                        <input type="number" name="p" class="form-control" placeholder="Value" required>
+                        <input type="number" name="p" id="input-p" class="form-control" placeholder="Value" value="8" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Potassium (K)</label>
-                        <input type="number" name="k" class="form-control" placeholder="Value" required>
+                        <input type="number" name="k" id="input-k" class="form-control" placeholder="Value" value="15" required>
                     </div>
                 </div>
 
@@ -181,8 +552,9 @@
             <div class="result-panel">
                 <div class="row text-center">
                     <div class="col-md-6 border-end" style="border-color: rgba(255,255,255,0.2) !important;">
-                        <div class="data-label">Waste Category</div>
-                        <div class="data-value text-success-bright">{{ category }}</div>
+                        <div class="data-label">Compost Health</div>
+                        <div class="data-value" id="result-compost-state">Checking...</div>
+                        <div style="font-size: 0.8rem; opacity: 0.75; margin-top: 4px;">Classification: <span id="result-category-raw">{{ category }}</span></div>
                     </div>
                     <div class="col-md-6">
                         <div class="data-label">Predicted Readiness</div>
@@ -193,7 +565,577 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Nutrient Analysis Dashboard -->
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            <h5><i class="fas fa-seedling"></i> Nutrient Analysis Dashboard (N, P, K)</h5>
+            <span class="badge px-2 py-1 small" style="font-size: 0.75rem; background-color: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981;">TRADING VIEW</span>
+        </div>
+        <div class="p-4">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-5">
+                    <div class="text-secondary small mb-2"><i class="fas fa-sliders-h me-1"></i> Current Inputs (Real-time Candlesticks)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="canvas-nutrients" class="trading-wick-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-8 col-md-7">
+                    <div class="text-secondary small mb-2"><i class="fas fa-chart-line me-1"></i> Historical Nutrient Trend</div>
+                    <div class="chart-canvas-container" style="background-color: #0f172a; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px;">
+                        <canvas id="chart-nutrients-history"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Condition Analysis Dashboard -->
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            <h5><i class="fas fa-thermometer-half"></i> Condition Analysis Dashboard (pH, Temp, Humid, Moist)</h5>
+            <span class="badge px-2 py-1 small" style="font-size: 0.75rem; background-color: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981;">TRADING VIEW</span>
+        </div>
+        <div class="p-4">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-5">
+                    <div class="text-secondary small mb-2"><i class="fas fa-sliders-h me-1"></i> Current Inputs (Real-time Candlesticks)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="canvas-conditions" class="trading-wick-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-8 col-md-7">
+                    <div class="text-secondary small mb-2"><i class="fas fa-chart-line me-1"></i> Historical Condition Trend</div>
+                    <div class="chart-canvas-container" style="background-color: #0f172a; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05); padding: 10px;">
+                        <canvas id="chart-conditions-history"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if days %}
+    <!-- Diagnostic Action Card -->
+    <div class="dashboard-card p-4 text-center" id="recommendation-card" style="border: 2px solid rgba(16, 185, 129, 0.3); background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, #1e293b 100%);">
+        <h5 style="color: #10b981; font-weight: 700; margin-bottom: 12px;"><i class="fas fa-heartbeat me-2"></i>Compost Health Diagnostics & Action Plan</h5>
+        <p id="recommendation-text" class="text-white mb-0" style="font-size: 1.05rem; font-weight: 500; line-height: 1.6;"></p>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    // Sidebar drawer toggles
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const drawerClose = document.getElementById('drawer-close');
+    const sidebarDrawer = document.getElementById('sidebar-drawer');
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+
+    function openDrawer() {
+        sidebarDrawer.classList.add('open');
+        drawerBackdrop.classList.add('show');
+    }
+
+    function closeDrawer() {
+        sidebarDrawer.classList.remove('open');
+        drawerBackdrop.classList.remove('show');
+    }
+
+    hamburgerBtn.addEventListener('click', openDrawer);
+    drawerClose.addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+
+    // Tab switcher inside sidebar
+    function switchTab(tabId) {
+        // Tab buttons
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Tab panes
+        const panes = document.querySelectorAll('.drawer-pane');
+        panes.forEach(p => p.classList.remove('active'));
+        
+        // Activate selected
+        const selectedBtn = Array.from(tabs).find(t => t.innerText.toLowerCase().includes(tabId));
+        if (selectedBtn) selectedBtn.classList.add('active');
+        
+        const selectedPane = document.getElementById('pane-' + tabId);
+        if (selectedPane) selectedPane.classList.add('active');
+    }
+
+    // Historical predictions data from SQLite via Jinja2
+    const predictionHistory = {{ history | tojson if history else '[]' }};
+
+    // Specs for Nutrient ranges
+    const NUTRIENTS = {
+        n: { name: 'Nitrogen (N)', min: 30, max: 60, scaleMin: 0, scaleMax: 100 },
+        p: { name: 'Phosphorus (P)', min: 15, max: 35, scaleMin: 0, scaleMax: 50 },
+        k: { name: 'Potassium (K)', min: 40, max: 80, scaleMin: 0, scaleMax: 120 }
+    };
+
+    // Specs for Condition ranges
+    const CONDITIONS = {
+        ph: { name: 'pH Level', min: 6.0, max: 7.5, scaleMin: 4.0, scaleMax: 9.0 },
+        temp: { name: 'Temp', min: 28.0, max: 40.0, scaleMin: 15.0, scaleMax: 45.0, unit: '°C' },
+        humidity: { name: 'Humidity', min: 50.0, max: 80.0, scaleMin: 20.0, scaleMax: 100.0, unit: '%' },
+        moisture: { name: 'Moisture', min: 18.0, max: 32.0, scaleMin: 5.0, scaleMax: 40.0, unit: '%' }
+    };
+
+    // Helper: analyze compost health and deficiencies
+    function analyzeCompost(ph, temp, humidity, moisture, n, p, k) {
+        let outOfRange = [];
+        let state = "Good";
+        
+        // Rotten condition: Excessive moisture + cold temp
+        if (moisture > 32.0 && temp < 25.0) {
+            state = "Rotten";
+        }
+        
+        if (ph < 6.0) outOfRange.push({ param: 'ph', name: 'pH Level', type: 'low', msg: 'Add wood ash or agricultural lime to raise pH.' });
+        else if (ph > 7.5) outOfRange.push({ param: 'ph', name: 'pH Level', type: 'high', msg: 'Add pine needles or peat moss to lower pH.' });
+        
+        if (temp < 28.0) outOfRange.push({ param: 'temp', name: 'Temperature', type: 'low', msg: 'Turn the pile to introduce oxygen and activate microbial heating.' });
+        else if (temp > 40.0) outOfRange.push({ param: 'temp', name: 'Temperature', type: 'high', msg: 'Turn the pile to release excess heat.' });
+        
+        if (humidity < 50.0) outOfRange.push({ param: 'humidity', name: 'Humidity', type: 'low', msg: 'Increase moisture level to support ambient humidity.' });
+        else if (humidity > 80.0) outOfRange.push({ param: 'humidity', name: 'Humidity', type: 'high', msg: 'Turn the pile to aerate and dry out excess humidity.' });
+        
+        if (moisture < 18.0) outOfRange.push({ param: 'moisture', name: 'Moisture', type: 'low', msg: 'Sprinkle with water to reach a damp sponge consistency.' });
+        else if (moisture > 32.0) {
+            if (state !== "Rotten") {
+                outOfRange.push({ param: 'moisture', name: 'Moisture', type: 'high', msg: 'Add dry brown materials (shredded cardboard, dry leaves) to absorb water.' });
+            } else {
+                outOfRange.push({ param: 'moisture', name: 'Moisture', type: 'high', msg: 'Add dry leaves, straw, or sawdust to absorb moisture.' });
+            }
+        }
+        
+        if (n < 30.0) outOfRange.push({ param: 'n', name: 'Nitrogen (N)', type: 'low', msg: 'Add green waste (food scraps, grass clippings) to boost Nitrogen.' });
+        else if (n > 60.0) outOfRange.push({ param: 'n', name: 'Nitrogen (N)', type: 'high', msg: 'Add carbon-rich browns (dry leaves, straw) to balance Nitrogen.' });
+        
+        if (p < 15.0) outOfRange.push({ param: 'p', name: 'Phosphorus (P)', type: 'low', msg: 'Add bone meal or organic rock phosphate.' });
+        else if (p > 35.0) outOfRange.push({ param: 'p', name: 'Phosphorus (P)', type: 'high', msg: 'Add carbon-rich materials to dilute Phosphorus.' });
+        
+        if (k < 40.0) outOfRange.push({ param: 'k', name: 'Potassium (K)', type: 'low', msg: 'Add wood ash, kelp meal, or banana peels.' });
+        else if (k > 80.0) outOfRange.push({ param: 'k', name: 'Potassium (K)', type: 'high', msg: 'Turn and dilute the mixture with other organic material.' });
+        
+        if (state !== "Rotten") {
+            if (outOfRange.length === 0) {
+                state = "Good";
+            } else if (outOfRange.length <= 2) {
+                state = "Harmful";
+            } else {
+                state = "Worst";
+            }
+        }
+        
+        let recommendation = "";
+        if (state === "Good") {
+            recommendation = "Compost health is in a Good state. No need to add anything!";
+        } else if (state === "Rotten") {
+            recommendation = "Compost is in a Rotten state. The moisture level is too high under cold conditions. To restore healthy decomposition, please add the following items: dry leaves, straw, or sawdust to absorb moisture, and turn the pile to increase aeration.";
+        } else {
+            const reasons = outOfRange.map(o => `${o.name} is ${o.type === 'low' ? 'deficient' : 'excessive'}`).join(', ');
+            const suggestions = outOfRange.map(o => o.msg).join(' ');
+            recommendation = `Compost is in a ${state} state. Reasons: ${reasons}. Suggested Actions: ${suggestions}`;
+        }
+        
+        return { state, outOfRange, recommendation };
+    }
+
+    // Function to draw candlesticks on canvas
+    function drawCandlesticks(canvasId, values, specs) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        
+        const width = rect.width;
+        const height = rect.height;
+        
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw grid lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        for (let i = 1; i <= 4; i++) {
+            const y = (height - 35) * (i / 5) + 10;
+            ctx.beginPath();
+            ctx.moveTo(10, y);
+            ctx.lineTo(width - 10, y);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        
+        const keys = Object.keys(specs);
+        const colWidth = width / keys.length;
+        
+        keys.forEach((key, index) => {
+            const spec = specs[key];
+            const val = parseFloat(values[key] !== undefined ? values[key] : spec.min);
+            
+            const x = index * colWidth + colWidth / 2;
+            const padTop = 25;
+            const padBot = 40;
+            const chartHeight = height - padTop - padBot;
+            
+            function getValY(v) {
+                const ratio = (v - spec.scaleMin) / (spec.scaleMax - spec.scaleMin);
+                const clamped = Math.max(0, Math.min(1, ratio));
+                return height - padBot - clamped * chartHeight;
+            }
+            
+            const yMinScale = getValY(spec.scaleMin);
+            const yMaxScale = getValY(spec.scaleMax);
+            const yTargetMin = getValY(spec.min);
+            const yTargetMax = getValY(spec.max);
+            const yCurrent = getValY(val);
+            
+            const isHealthy = val >= spec.min && val <= spec.max;
+            const primaryColor = isHealthy ? '#10b981' : '#ef4444';
+            const bodyBgColor = isHealthy ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+            
+            // 1. Draw Wick
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, yMinScale);
+            ctx.lineTo(x, yMaxScale);
+            ctx.stroke();
+            
+            // 2. Draw Body
+            const bodyHeight = Math.abs(yTargetMin - yTargetMax);
+            const bodyWidth = Math.min(colWidth * 0.45, 45);
+            ctx.fillStyle = bodyBgColor;
+            ctx.strokeStyle = primaryColor;
+            ctx.lineWidth = 2.5;
+            
+            ctx.shadowColor = primaryColor;
+            ctx.shadowBlur = 8;
+            ctx.fillRect(x - bodyWidth / 2, yTargetMax, bodyWidth, bodyHeight);
+            ctx.strokeRect(x - bodyWidth / 2, yTargetMax, bodyWidth, bodyHeight);
+            ctx.shadowBlur = 0;
+            
+            // 3. Draw Price Line
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - bodyWidth * 0.65, yCurrent);
+            ctx.lineTo(x + bodyWidth * 0.65, yCurrent);
+            ctx.stroke();
+            
+            // 4. Draw Current Value Label
+            ctx.fillStyle = primaryColor;
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(val + (spec.unit || ''), x, yCurrent - 9);
+            
+            // Indicator triangle
+            ctx.beginPath();
+            ctx.moveTo(x, yCurrent - 2);
+            ctx.lineTo(x - 4, yCurrent - 7);
+            ctx.lineTo(x + 4, yCurrent - 7);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 5. Target range labels
+            ctx.fillStyle = '#64748b';
+            ctx.font = '9px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(spec.min, x - bodyWidth / 2 - 4, yTargetMin + 3);
+            ctx.textAlign = 'left';
+            ctx.fillText(spec.max, x + bodyWidth / 2 + 4, yTargetMax + 3);
+            
+            // 6. Label at bottom
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(spec.name, x, height - 15);
+            
+            ctx.fillStyle = isHealthy ? '#10b981' : '#ef4444';
+            ctx.font = 'bold 9px Inter, sans-serif';
+            ctx.fillText(isHealthy ? 'OPTIMAL' : 'HARMFUL', x, height - 3);
+        });
+    }
+
+    // Calculate point background colors for history line charts
+    function getPointColors(values, spec) {
+        return values.map(val => (val >= spec.min && val <= spec.max) ? '#10b981' : '#ef4444');
+    }
+
+    let nutrientChartInstance = null;
+    let conditionChartInstance = null;
+
+    function initHistoryCharts() {
+        const chronoHistory = [...predictionHistory].reverse();
+        if (chronoHistory.length === 0) return;
+        
+        const labels = chronoHistory.map(item => {
+            const parts = item.timestamp.split(' ');
+            if (parts.length >= 2) {
+                const datePart = parts[0].substring(5);
+                const timePart = parts[1].substring(0, 5);
+                return datePart.replace('-', '/') + ' ' + timePart;
+            }
+            return item.timestamp;
+        });
+
+        // 1. Nutrients History Chart
+        const nData = chronoHistory.map(item => item.n);
+        const pData = chronoHistory.map(item => item.p);
+        const kData = chronoHistory.map(item => item.k);
+
+        const nutrientCtx = document.getElementById('chart-nutrients-history');
+        if (nutrientCtx) {
+            nutrientChartInstance = new Chart(nutrientCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Nitrogen (N)',
+                            data: nData,
+                            borderColor: 'rgba(14, 165, 233, 0.7)',
+                            backgroundColor: 'rgba(14, 165, 233, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(nData, NUTRIENTS.n),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Phosphorus (P)',
+                            data: pData,
+                            borderColor: 'rgba(236, 72, 153, 0.7)',
+                            backgroundColor: 'rgba(236, 72, 153, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(pData, NUTRIENTS.p),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Potassium (K)',
+                            data: kData,
+                            borderColor: 'rgba(245, 158, 11, 0.7)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(kData, NUTRIENTS.k),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.parsed.y;
+                                    const datasetIndex = context.datasetIndex;
+                                    let spec = datasetIndex === 0 ? NUTRIENTS.n : (datasetIndex === 1 ? NUTRIENTS.p : NUTRIENTS.k);
+                                    const status = (val >= spec.min && val <= spec.max) ? 'Safe/Optimal' : 'Harmful/Imbalance';
+                                    return `${context.dataset.label}: ${val} (${status})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Conditions History Chart
+        const phData = chronoHistory.map(item => item.ph);
+        const tempData = chronoHistory.map(item => item.temp);
+        const humData = chronoHistory.map(item => item.humidity);
+        const moistData = chronoHistory.map(item => item.moisture);
+
+        const conditionCtx = document.getElementById('chart-conditions-history');
+        if (conditionCtx) {
+            conditionChartInstance = new Chart(conditionCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'pH Level',
+                            data: phData,
+                            borderColor: 'rgba(6, 182, 212, 0.7)',
+                            backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(phData, CONDITIONS.ph),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Temp (°C)',
+                            data: tempData,
+                            borderColor: 'rgba(244, 63, 94, 0.7)',
+                            backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(tempData, CONDITIONS.temp),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: humData,
+                            borderColor: 'rgba(59, 130, 246, 0.7)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(humData, CONDITIONS.humidity),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Moisture (%)',
+                            data: moistData,
+                            borderColor: 'rgba(20, 184, 166, 0.7)',
+                            backgroundColor: 'rgba(20, 184, 166, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointBackgroundColor: getPointColors(moistData, CONDITIONS.moisture),
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.parsed.y;
+                                    const idx = context.datasetIndex;
+                                    let spec = idx === 0 ? CONDITIONS.ph : (idx === 1 ? CONDITIONS.temp : (idx === 2 ? CONDITIONS.humidity : CONDITIONS.moisture));
+                                    const status = (val >= spec.min && val <= spec.max) ? 'Safe/Optimal' : 'Harmful/Imbalance';
+                                    return `${context.dataset.label}: ${val}${spec.unit || ''} (${status})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#64748b', font: { family: 'Inter', size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function updateDashboard() {
+        const ph = parseFloat(document.getElementById('input-ph').value) || 0;
+        const temp = parseFloat(document.getElementById('input-temp').value) || 0;
+        const humidity = parseFloat(document.getElementById('input-humidity').value) || 0;
+        const moisture = parseFloat(document.getElementById('input-moisture').value) || 0;
+        const n = parseFloat(document.getElementById('input-n').value) || 0;
+        const p = parseFloat(document.getElementById('input-p').value) || 0;
+        const k = parseFloat(document.getElementById('input-k').value) || 0;
+
+        // Draw candlesticks
+        drawCandlesticks('canvas-nutrients', { n, p, k }, NUTRIENTS);
+        drawCandlesticks('canvas-conditions', { ph, temp, humidity, moisture }, CONDITIONS);
+
+        // Analyze compost
+        const analysis = analyzeCompost(ph, temp, humidity, moisture, n, p, k);
+
+        // Update action plan text if it is rendered on page (after prediction completes)
+        const recText = document.getElementById('recommendation-text');
+        if (recText) {
+            recText.innerText = analysis.recommendation;
+        }
+
+        // Update result display if results exist on page
+        const stateDisplay = document.getElementById('result-compost-state');
+        if (stateDisplay) {
+            stateDisplay.innerText = analysis.state.toUpperCase();
+            
+            // Set styles based on compost health state
+            stateDisplay.className = 'data-value';
+            if (analysis.state === 'Good') {
+                stateDisplay.style.color = '#10b981';
+                stateDisplay.style.textShadow = '0 0 10px rgba(16, 185, 129, 0.4)';
+            } else if (analysis.state === 'Harmful') {
+                stateDisplay.style.color = '#f59e0b';
+                stateDisplay.style.textShadow = '0 0 10px rgba(245, 158, 11, 0.4)';
+            } else if (analysis.state === 'Worst') {
+                stateDisplay.style.color = '#ef4444';
+                stateDisplay.style.textShadow = '0 0 10px rgba(239, 68, 68, 0.4)';
+            } else if (analysis.state === 'Rotten') {
+                stateDisplay.style.color = '#ec4899';
+                stateDisplay.style.textShadow = '0 0 10px rgba(236, 72, 153, 0.4)';
+            }
+        }
+    }
+
+    window.addEventListener('load', () => {
+        initHistoryCharts();
+        updateDashboard();
+
+        const inputIds = ['input-ph', 'input-temp', 'input-humidity', 'input-moisture', 'input-n', 'input-p', 'input-k'];
+        inputIds.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', updateDashboard);
+                input.addEventListener('change', updateDashboard);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            const ph = parseFloat(document.getElementById('input-ph').value) || 0;
+            const temp = parseFloat(document.getElementById('input-temp').value) || 0;
+            const humidity = parseFloat(document.getElementById('input-humidity').value) || 0;
+            const moisture = parseFloat(document.getElementById('input-moisture').value) || 0;
+            const n = parseFloat(document.getElementById('input-n').value) || 0;
+            const p = parseFloat(document.getElementById('input-p').value) || 0;
+            const k = parseFloat(document.getElementById('input-k').value) || 0;
+            drawCandlesticks('canvas-nutrients', { n, p, k }, NUTRIENTS);
+            drawCandlesticks('canvas-conditions', { ph, temp, humidity, moisture }, CONDITIONS);
+        });
+    });
+</script>
 
 </body>
 </html>

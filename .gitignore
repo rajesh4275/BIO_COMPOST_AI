@@ -11,3 +11,8 @@ venv/
 .vscode/
 # Ignore heavy pre-trained ML models
 models/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
